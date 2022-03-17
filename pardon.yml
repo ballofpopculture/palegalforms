@@ -1,0 +1,291 @@
+---
+metadata:
+  title: |
+    Pennsylvania Clemency Application
+  short title: |
+    Pardon
+  description: |
+    A clemency application interview
+  authors:
+    - name: Scott Lovejoy
+      organization: Dickinson Law
+  revision_date: 2022-02-19
+---
+objects:
+  - user: Individual
+---
+question: |
+  Have you previously filled out a Clemency Application in Pennsylvania?
+yesno: previous_clemency
+---
+if: |
+  previous_clemency
+question: |
+  When was the Clemency Granted or Denied?
+fields:
+  - Date: clemency_app_date
+    datatype: date
+---
+question: |
+  What type of clemency are you requesting?
+field: clemency_requested
+choices:
+   - Pardon: "pardon"
+   - Commute Parole: "parole"
+   - Commute Life Imprisonment to Life on Parole: "life"
+   - Commute Death Sentence to Life Imprisonment: "death"
+   - Commute Minimum Sentence: "min"
+   - Commute Maximum Sentence: "max"
+   - "Expedited Review for: Non-Violent Marijuana and/or Paraphernalia Conviction(s)": "nonviolent"
+---
+code: |
+  clemency_requested_commute_pardon = True if clemency_requested == "pardon" else False
+  clemency_requested_commute_parole = True if clemency_requested == "parole" else False
+  clemency_requested_commute_life = True if clemency_requested == "life" else False
+  clemency_requested_commute_death = True if clemency_requested == "death" else False
+  clemency_requested_commute_min = True if clemency_requested == "min" else False
+  clemency_requested_commute_max = True if clemency_requested == "max" else False
+  clemency_requested_commute_nonviolent = True if clemency_requested == "nonviolent" else False
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Salutation: salutation
+    input type: radio
+    choices:
+      - Mr: mr
+      - Ms: ms
+      - Mrs: mrs 
+      - Miss: miss
+      - Other: other
+  - First Name: first_name
+  - Middle Name: middle_name
+    required: False
+  - Last Name: last_name
+  - Suffix (if applicable): suffix
+    required: False
+  - Alias and Other Names: alias
+    required: False
+  - Social Security Number: ssn
+  - Date of Birth: dob
+    datatype: date
+---
+code: |
+  salutation_mr = True if salutation == "mr" else False
+  salutation_ms = True if salutation == "ms" else False
+  salutation_mrs = True if salutation == "mrs" else False
+  salutation_miss = True if salutation == "miss" else False
+  salutation_other = True if salutation == "other" else False
+---
+question: |
+  What is your address?
+fields:
+   - Number and Street: street
+   - Apt/Floor (if applicable): apt_num
+     required: False
+   - City: city
+   - State: state
+   - Zip Code: zip
+---
+question: |
+  Please enter your contact information
+fields:
+   - Email Address: email
+   - Primary Phone Number: phone
+   - Secondary Phone Number: secondary_phone
+     required: False
+---
+question: |
+  Are you currently incarcerated?
+yesno: incarcerated
+---
+if: |
+  incarcerated
+question: |
+  Please fill in your inmate information
+fields:
+  -  Name of Institution: institution
+  -  Inmate Number: inmate_number
+---
+code: |
+  if incarcerated:
+    on_parole = False
+    clemency_representation = "representation_doc" 
+---
+if: |
+  not incarcerated
+question: |
+  Are you currently on parole?
+yesno: on_parole
+---
+if: |
+  on_parole
+question: |
+  Please fill in your parolee number.
+fields:
+  -  Parole Number: parole_number
+---
+if: |
+  not incarcerated
+question: |
+  Who will represent you if granted a public hearing?
+field: clemency_representation
+choices:
+  - Self: "representation_self"
+  - Friend: "representation_friend"
+  - Family Member: "representation_family"
+  - Attorney: "representation_attorney"
+  - Department of Corrections: "representation_doc"
+---
+if: |
+  clemency_representation != "representation_self"
+question: |
+  Please input your representative's contact information
+fields: 
+    - Name: representative_name
+    - Address Line 1: representative_address_1
+    - Address Line 2: representative_address_2
+    - Address Line 3: representative_address_3
+    - Address Line 4: representative_address_4
+    - Phone Number : representative_phone_number
+    - Email: representative_email
+---
+question: |
+  What was the incident date of your oldest case for which you seek clemency?
+fields:
+  - Offense Date: offense_date_1
+    datatype: date
+under: |
+  You can find more information about past convictions on [UJS Portal](https://ujsportal.pacourts.us/CaseSearch)
+---
+question: |
+  What was the OTN Number for your oldest case for which you seek clemency?
+subquestion: |
+  [FIELD offense_otn_1_a]-[FIELD offense_otn_1_b]
+fields:
+   - OTN Number: offense_otn_1_a
+   - OTN Number: offense_otn_1_b
+under: |
+  You can find more information about past convictions on [UJS Portal](https://ujsportal.pacourts.us/CaseSearch)
+---
+question: |
+  Please list each conviction related to by name. 
+subquestion: |
+  Note: Please use the name of the conviction, not the statutory code. (Ex: "Possession-small amt. of marijuana" not "780-113(a)(31)")
+fields:
+  - 1: offense_name_1
+  - 2: offense_name_2
+    required: False
+  - 3: offense_name_3
+    required: False
+  - 4: offense_name_4
+    required: False
+  - 5: offense_name_5
+    required: False
+  - 6: offense_name_6
+    required: False
+  - 7: offense_name_7
+    required: False
+  - 8: offense_name_8
+    required: False
+  - 9: offense_name_9
+    required: False
+  - 10: offense_name_10
+    required: False
+under: |
+  You can find more information about past convictions on [UJS Portal](https://ujsportal.pacourts.us/CaseSearch)
+---
+question: |
+  Please include a personal statement.
+fields:
+  - Personal Statement: mood
+    datatype: mlarea
+    rows: 15
+    using: ml-testml2.json:mood
+---
+code: |
+  if mood.prediction in ['boredom', 'anger', 'hate', 'sadness']:
+    rewrite = True
+  else:
+    rewrite = False
+---
+question: |
+  % if mood.prediction in ['boredom', 'anger', 'hate']:
+  You should consider a rewrite of your personal statement to improve the sentiment. 
+  % else:
+  Your personal statement is well written. 
+  % endif
+buttons: 
+  - Continue: continue
+  - Back: back
+---
+question: |
+  Here is your document.
+attachment:
+    name: pardon_application_2022
+    filename: filled-form
+    pdf template file: pardon_application_2022.pdf
+    field code:
+      - clemency_type_commute_parole:  clemency_requested_commute_parole 
+      - clemency_type_pardon:  clemency_requested_commute_pardon 
+      - clemency_type_non_violent:  clemency_requested_commute_nonviolent 
+      - clemency_type_commute_life:  clemency_requested_commute_life 
+      - clemency_type_commute_min:  clemency_requested_commute_min 
+      - clemency_type_commute_max:  clemency_requested_commute_max 
+      - clemency_type_commute_death:  clemency_requested_commute_death 
+      - previous_clemency_true: previous_clemency
+      - previously_clemency_app_false: not previous_clemency
+      - previous_filing_date: clemency_app_date if previous_clemency else ''
+      - salutation_ms:  salutation_mr 
+      - salutation_miss:  salutation_miss 
+      - salutation_mr:  salutation_mr 
+      - salutation_mrs:  salutation_mrs 
+      - salutation_other:  salutation_other 
+      - first_name:  first_name 
+      - full_middle_name:  middle_name  
+      - last_name:  last_name 
+      - suffix:  suffix 
+      - aliases:  alias 
+      - prison_name:  institution if incarcerated else ''
+      - inmate_number:  inmate_number if incarcerated else ''
+      - parole_number: parole_number if on_parole else ''
+      - date_of_birth: dob
+      - ssn: ssn
+      - address_number_street:  street 
+      - apartment_number_floor:  apt_num 
+      - city:  city 
+      - state:  state 
+      - zip_code:  zip 
+      - email:  email 
+      - primary_phone:  phone 
+      - secondary_phone:  secondary_phone 
+      - representation_self_check: True if clemency_representation == "representation_self" else False
+      - representation_friend_check: True if clemency_representation == "representation_friend" else False
+      - representation_family_check: True if clemency_representation == "representation_family" else False
+      - representation_attorney_check: True if clemency_representation == "representation_attorney" else False
+      - representation_doc_check: True if clemency_representation == "representation_doc" else False
+      - representative_name: representative_name if clemency_representation != "representation_self" else ''
+      - representative_address_1: representative_address_1 if clemency_representation != "representation_self" else ''
+      - representative_address_2: representative_address_2 if clemency_representation != "representation_self" else ''
+      - representative_address_3: representative_address_3 if clemency_representation != "representation_self" else ''
+      - representative_address_4: representative_address_4 if clemency_representation != "representation_self" else ''
+      - representative_phone_number: representative_phone_number if clemency_representation != "representation_self" else ''
+      - representative_email: representative_email if clemency_representation != "representation_self" else ''
+      - case_1_offense_month: offense_date_1.month
+      - case_1_offense_day: offense_date_1.day
+      - case_1_offense_year: offense_date_1.year
+      - case_1_otn_a: offense_otn_1_a
+      - case_1_otn_b: offense_otn_1_b
+      - case_1_offense_1: offense_name_1
+      - case_1_offense_2: offense_name_2
+      - case_1_offense_3: offense_name_3
+      - case_1_offense_4: offense_name_4
+      - case_1_offense_5: offense_name_5
+      - case_1_offense_6: offense_name_6
+      - case_1_offense_7: offense_name_7
+      - case_1_offense_8: offense_name_8
+      - case_1_offense_9: offense_name_9
+      - case_1_offense_10: offense_name_10
+      - personal_statement: mood.text
+mandatory: True
+---
