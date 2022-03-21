@@ -196,28 +196,45 @@ under: |
   You can find more information about past convictions on [UJS Portal](https://ujsportal.pacourts.us/CaseSearch)
 ---
 question: |
-  Please include a personal statement.
+  Describe the incident for which you are seeking clemency.
 fields:
-  - Personal Statement: mood
-    datatype: mlarea
-    rows: 15
-    using: ml-testml2.json:mood
+  - Incident Description: case_1_incident_desc
+    label above field: True
+    datatype: area
+    rows: 10
 ---
 code: |
-  if mood.prediction in ['boredom', 'anger', 'hate', 'sadness']:
-    rewrite = True
-  else:
-    rewrite = False
+  ml = SimpleTextMachineLearner('moods', 'ml-sentiment_smaller.json')
+---
+mandatory: True
+code: |
+  greeting_saved
+  #final_screen
 ---
 question: |
-  % if mood.prediction in ['boredom', 'anger', 'hate']:
-  You should consider a rewrite of your personal statement to improve the sentiment. 
-  % else:
-  Your personal statement is well written. 
-  % endif
-buttons: 
-  - Continue: continue
-  - Back: back
+  Please include a personal statement.
+fields:
+  - label: "Your personal statement:"
+    field: greeting
+    label above field: True
+    input type: area
+  - note: |
+      [TARGET warning]
+check in: validate_greeting
+---
+event: validate_greeting
+code: |
+  if action_argument('greeting'):
+    predictions = ml.predict(action_argument('greeting'))
+    log(predictions, 'log')
+    if len(predictions) > 0 and predictions[0] in ['worry', 'negative', 'angry', 'anger', 'hate']:
+      log('AM I HERE?', 'log')
+      background_response(target='warning', content="Maybe that isn't an appropriate sentiment for a personal statement?")
+  background_response(target='warning', content="")
+---
+code: |
+  ml.save_for_classification(greeting)
+  greeting_saved = True
 ---
 question: |
   Here is your document.
@@ -286,6 +303,7 @@ attachment:
       - case_1_offense_8: offense_name_8
       - case_1_offense_9: offense_name_9
       - case_1_offense_10: offense_name_10
-      - personal_statement: mood.text
+      - case_1_incident_desc: case_1_incident_desc
+      - personal_statement: greeting
 mandatory: True
 ---
